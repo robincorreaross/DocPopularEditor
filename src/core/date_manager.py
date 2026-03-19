@@ -24,3 +24,9 @@ def format_iso_to_date_br(iso_str: str) -> str:
     except Exception:
         pass
     return ""
+
+
+def formatar_data_hoje() -> str:
+    """Retorna a data de hoje no formato DD/MM/AAAA."""
+    from datetime import date
+    return date.today().strftime("%d/%m/%Y")

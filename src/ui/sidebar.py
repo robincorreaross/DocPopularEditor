@@ -197,6 +197,18 @@ class Sidebar(QFrame):
         for btn in self._nav_buttons:
             btn.set_active(False)
 
+    def set_active(self, name: str):
+        """Ativa um botão por nome: 'nova_transacao', 'buscar', 'configuracoes', 'ajuda'."""
+        mapping = {
+            "nova_transacao": self.btn_nova_transacao,
+            "buscar": self.btn_buscar,
+            "configuracoes": self.btn_configuracoes,
+            "ajuda": self.btn_ajuda,
+        }
+        target = mapping.get(name)
+        if target:
+            self._set_active(target)
+
     def _on_nova_transacao(self):
         self._set_active(self.btn_nova_transacao)
         self.nova_transacao_clicked.emit()

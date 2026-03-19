@@ -455,6 +455,12 @@ class MainWindow(QMainWindow):
         
         self.wrapper_layout.addWidget(self.scroll_area, 1)
 
+        # Widget do AuditorWizard (modo Transação — oculto inicialmente)
+        self._auditor_widget = None  # criado dinamicamente em _show_auditor_wizard
+        self._auditor_placeholder = QWidget()
+        self._auditor_placeholder.hide()
+        self.wrapper_layout.addWidget(self._auditor_placeholder)
+
         self.main_layout.addWidget(self._update_banner)
         self.main_layout.addWidget(self._license_banner)
         self.main_layout.addWidget(self.content_wrapper, 1)
@@ -514,23 +520,101 @@ class MainWindow(QMainWindow):
 
     def _on_sidebar_nova_transacao(self):
         """Inicia o fluxo de Nova Transação PFPB."""
-        # TODO: Implementar o AuditorWizard em auditor_wizard.py
-        QMessageBox.information(
-            self, "Em Desenvolvimento",
-            "O fluxo de Nova Transação PFPB será implementado em breve!\n\n"
-            "Esta funcionalidade incluirá:\n"
-            "• Digitalização guiada por etapas\n"
-            "• Validação de CPF\n"
-            "• Geração automática de PDF"
-        )
+        from src.core.transaction import criar_transacao_unica
+        from src.core.config import load_settings
+
+        try:
+            settings = load_settings()
+        except Exception:
+            settings = {}
+
+        transaction = criar_transacao_unica()
+        self._show_auditor_wizard(transaction, settings)
 
     def _on_sidebar_buscar(self):
         """Abre o painel de busca de documentos por CPF."""
-        # TODO: Implementar o SearchDialog em search_dialog.py
-        QMessageBox.information(
-            self, "Em Desenvolvimento",
-            "A busca de documentos por CPF será implementada em breve!"
+        from src.ui.search_dialog import SearchDialog
+        from src.core.config import load_settings
+        try:
+            settings = load_settings()
+        except Exception:
+            settings = {}
+        dlg = SearchDialog(self, settings)
+        dlg.exec()
+
+    def _show_auditor_wizard(self, transaction, settings: dict):
+        """Substitui a área de conteúdo pelo AuditorWizard."""
+        from src.ui.auditor_wizard import AuditorWizard
+
+        # Remove o wizard anterior se existir
+        if self._auditor_widget is not None:
+            self._auditor_widget.setParent(None)
+            self._auditor_widget = None
+
+        # Cria novo wizard
+        self._auditor_widget = AuditorWizard(transaction, settings)
+        self._auditor_widget.concluido.connect(self._on_transacao_concluida)
+        self._auditor_widget.cancelado.connect(self._on_transacao_cancelada)
+
+        self.wrapper_layout.addWidget(self._auditor_widget, 1)
+
+        # Esconde scroll_area e drop_zone, mostra apenas o wizard
+        self.scroll_area.hide()
+        self._auditor_widget.show()
+        self._set_modo_transacao()
+        self.sidebar.set_active("nova_transacao")
+        self.status.showMessage("Transação em andamento...")
+
+    def _on_transacao_concluida(self, transaction):
+        """Chamado quando o AuditorWizard finaliza todas as etapas."""
+        from src.core.pdf_generator import gerar_pdf_transacao
+        from src.core.config import load_settings
+        from PySide6.QtWidgets import QFileDialog
+        import os
+
+        try:
+            settings = load_settings()
+        except Exception:
+            settings = {}
+
+        # Gera o PDF final da transação
+        try:
+            pdf_bytes = gerar_pdf_transacao(transaction)
+        except Exception as e:
+            QMessageBox.critical(self, "Erro na Geração do PDF",
+                                 f"Não foi possível gerar o PDF da transação:\n{e}")
+            return
+
+        # Pergunta onde salvar
+        pasta_output = settings.get("output_folder", os.path.expanduser("~"))
+        nome_sugerido = f"Transacao_{transaction.nome_tipo}.pdf"
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Salvar PDF da Transação",
+            os.path.join(pasta_output, nome_sugerido),
+            "PDF (*.pdf)"
         )
+
+        if path:
+            try:
+                with open(path, "wb") as f:
+                    f.write(pdf_bytes)
+                self.status.showMessage(f"PDF salvo: {path}")
+            except Exception as e:
+                QMessageBox.critical(self, "Erro ao Salvar", f"Não foi possível salvar:\n{e}")
+
+        # Agora abre o PDF gerado no editor para revisar/editar
+        if path and os.path.exists(path):
+            self._open_file(path)
+        else:
+            self._on_transacao_cancelada()
+
+    def _on_transacao_cancelada(self):
+        """Chamado quando o usuário cancela a transação."""
+        if self._auditor_widget is not None:
+            self._auditor_widget.setParent(None)
+            self._auditor_widget = None
+        self._set_modo_home()
+        self.status.showMessage("Transação cancelada.")
 
     # ══════════════════════════════════════════════════════════
     # Ajuda

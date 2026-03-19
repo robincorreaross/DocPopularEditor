@@ -74,3 +74,45 @@ def gerar_pdf(
 
     c.save()
     return output_path
+
+
+def gerar_pdf_transacao(transaction) -> bytes:
+    """
+    Gera um PDF em memória com todas as imagens de todas as etapas da transação.
+    Retorna os bytes do PDF, sem salvar em disco.
+    """
+    from src.core.date_manager import formatar_data_hoje
+
+    data_hoje = formatar_data_hoje()
+    autorizacao = getattr(transaction, "numero_autorizacao", transaction.nome_tipo)
+
+    content_top = PAGE_H - HEADER_H - MARGIN
+    content_h = PAGE_H - HEADER_H - 2 * MARGIN
+    content_w = PAGE_W - 2 * MARGIN
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+
+    for etapa in transaction.etapas:
+        for img in etapa.imagens:
+            _draw_header(c, autorizacao, data_hoje)
+
+            img_w, img_h = img.size
+            ratio = min(content_w / img_w, content_h / img_h)
+            draw_w = img_w * ratio
+            draw_h = img_h * ratio
+
+            x = MARGIN + (content_w - draw_w) / 2
+            y = content_top - draw_h
+
+            img_buf = io.BytesIO()
+            img_rgb = img.convert("RGB")
+            img_rgb.save(img_buf, format="JPEG", quality=85)
+            img_buf.seek(0)
+            reader = ImageReader(img_buf)
+
+            c.drawImage(reader, x, y, width=draw_w, height=draw_h)
+            c.showPage()
+
+    c.save()
+    return buffer.getvalue()
