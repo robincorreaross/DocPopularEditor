@@ -23,6 +23,5 @@ dist/
 
 # Installer metadata
 installer_meta/
-RossPDFEditor_setup.exe
-ross_pdf_editor_setup.exe
+DocPopularEditor_setup.exe
 installer/

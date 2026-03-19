@@ -1,5 +1,5 @@
 """
-Ross PDF Editor – Ponto de entrada da aplicação.
+DocPopularEditor – Ponto de entrada da aplicação.
 
 Verifica licença antes de abrir a janela principal.
 Inicia o aplicativo desktop com PySide6.
@@ -40,7 +40,7 @@ def main():
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
 
     app = QApplication(sys.argv)
-    app.setApplicationName("Ross PDF Editor")
+    app.setApplicationName("DocPopularEditor")
     app.setOrganizationName("Ross")
 
     # Fonte padrão

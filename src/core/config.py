@@ -1,0 +1,96 @@
+"""
+config.py - Gerenciamento de configurações persistentes do DocPopularEditor.
+Salva/carrega configurações em settings.json.
+
+Em produção (PyInstaller): settings e key ficam em AppData/Local/DocPopularEditor/
+Em desenvolvimento: ficam na raiz do projeto.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+from typing import Any
+
+from cryptography.fernet import Fernet
+
+
+def _get_app_data_dir() -> Path:
+    """Retorna o diretório de dados da aplicação."""
+    if getattr(sys, "frozen", False):
+        app_data = Path.home() / "AppData" / "Local" / "DocPopularEditor"
+    else:
+        app_data = Path(__file__).parent.parent.parent
+    app_data.mkdir(parents=True, exist_ok=True)
+    return app_data
+
+
+APP_DATA_DIR = _get_app_data_dir()
+SETTINGS_FILE = APP_DATA_DIR / "settings.json"
+KEY_FILE = APP_DATA_DIR / ".app_key"
+
+DEFAULT_SETTINGS: dict[str, Any] = {
+    "output_folder": str(Path.home() / "Documents" / "DocPopularEditor"),
+    "scanner_name": "",
+    "license_key": "",
+}
+
+
+def _get_or_create_key() -> bytes:
+    """Obtém ou cria a chave de criptografia local."""
+    if KEY_FILE.exists():
+        return KEY_FILE.read_bytes()
+    key = Fernet.generate_key()
+    KEY_FILE.write_bytes(key)
+    return key
+
+
+def _encrypt(value: str) -> str:
+    if not value:
+        return ""
+    f = Fernet(_get_or_create_key())
+    return f.encrypt(value.encode()).decode()
+
+
+def _decrypt(value: str) -> str:
+    if not value:
+        return ""
+    try:
+        f = Fernet(_get_or_create_key())
+        return f.decrypt(value.encode()).decode()
+    except Exception:
+        return ""
+
+
+def load_settings() -> dict[str, Any]:
+    """Carrega as configurações do arquivo JSON."""
+    if not SETTINGS_FILE.exists():
+        save_settings(DEFAULT_SETTINGS.copy())
+        return DEFAULT_SETTINGS.copy()
+
+    with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
+        data: dict[str, Any] = json.load(f)
+
+    for provider in data.get("api_keys", {}):
+        data["api_keys"][provider] = _decrypt(data["api_keys"][provider])
+
+    for key, value in DEFAULT_SETTINGS.items():
+        if key not in data:
+            data[key] = value
+
+    return data
+
+
+def save_settings(settings: dict[str, Any]) -> None:
+    """Salva as configurações no arquivo JSON."""
+    data = settings.copy()
+    data["api_keys"] = {}
+    for provider, key in settings.get("api_keys", {}).items():
+        data["api_keys"][provider] = _encrypt(key)
+
+    output_folder = Path(settings.get("output_folder", str(DEFAULT_SETTINGS["output_folder"])))
+    output_folder.mkdir(parents=True, exist_ok=True)
+
+    with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)

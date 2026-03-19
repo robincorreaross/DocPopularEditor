@@ -1,8 +1,9 @@
 """
-Ross PDF Editor – Janela Principal.
+DocPopularEditor – Janela Principal.
 
-Interface clean e funcional com:
-- Toolbar com ações principais
+Interface unificada que combina o Ross PDF Editor com o DocPopular:
+- Sidebar permanente com navegação (Nova Transação, Buscar, Config, Ajuda)
+- Toolbar com ações de edição de PDF (visível nos modos Editor e Transação)
 - Área central de miniaturas com drag & drop
 - Tela inicial (drop zone) quando não há documento aberto
 - Suporte a seleção múltipla, exclusão, inserção e recorte
@@ -32,6 +33,7 @@ from src.engine.scan_engine import ScannerEngine
 from src.ui.page_thumbnail import PageThumbnail
 from src.ui.crop_dialog import CropDialog
 from src.ui.settings_dialog import SettingsDialog
+from src.ui.sidebar import Sidebar
 
 class ScanWorkerSignals(QObject):
     """
@@ -133,12 +135,17 @@ class FlowLayout(QVBoxLayout):
 
 
 class MainWindow(QMainWindow):
-    """Janela principal do Ross PDF Editor."""
+    """Janela principal do DocPopularEditor."""
 
-    APP_TITLE = "Ross PDF Editor"
+    APP_TITLE = "DocPopularEditor"
     SUPPORTED_PDF = "Arquivos PDF (*.pdf)"
     SUPPORTED_IMAGES = "Imagens (*.png *.jpg *.jpeg *.bmp *.tiff *.webp)"
     SUPPORTED_ALL = "PDF e Imagens (*.pdf *.png *.jpg *.jpeg *.bmp *.tiff *.webp)"
+
+    # Modos de operação
+    MODE_HOME = "home"
+    MODE_EDITOR = "editor"
+    MODE_TRANSACAO = "transacao"
 
     def __init__(self):
         super().__init__()
@@ -163,7 +170,10 @@ class MainWindow(QMainWindow):
         self._max_history = 30
 
         # Última pasta visitada (persistência via QSettings)
-        self._settings = QSettings("Ross", "RossPDFEditor")
+        self._settings = QSettings("Ross", "DocPopularEditor")
+
+        # Modo atual do aplicativo
+        self._current_mode = self.MODE_HOME
 
         self._setup_window()
         self._setup_toolbar()
@@ -171,7 +181,16 @@ class MainWindow(QMainWindow):
         self._setup_statusbar()
         self._show_drop_zone()
 
-        # Verificações em background após a janela estar pronta (igual DocPopular)
+        # Conectar sinais da Sidebar
+        self.sidebar.nova_transacao_clicked.connect(self._on_sidebar_nova_transacao)
+        self.sidebar.buscar_documento_clicked.connect(self._on_sidebar_buscar)
+        self.sidebar.configuracoes_clicked.connect(self._action_settings)
+        self.sidebar.ajuda_clicked.connect(self._action_help)
+
+        # Inicia no modo HOME
+        self._set_modo_home()
+
+        # Verificações em background após a janela estar pronta
         QTimer.singleShot(500, self._check_scanner_hardware)
         QTimer.singleShot(1000, self._iniciar_verificacao_update)
         QTimer.singleShot(2000, self._verificar_expiracao_licenca)
@@ -295,28 +314,30 @@ class MainWindow(QMainWindow):
         self.act_redo.setEnabled(False)
         self.toolbar.addAction(self.act_redo)
 
-        self.toolbar.addSeparator()
-
-        self.act_help = QAction("❓ Ajuda", self)
-        self.act_help.setToolTip("Central de Ajuda e Suporte")
-        self.act_help.triggered.connect(self._action_help)
-        self.toolbar.addAction(self.act_help)
-
-        self.act_settings = QAction("⚙️", self)
-        self.act_settings.setToolTip("Configurações do Aplicativo")
-        self.act_settings.triggered.connect(self._action_settings)
-        self.toolbar.addAction(self.act_settings)
+        # Nota: Ajuda e Configurações agora estão na Sidebar, removidos da Toolbar.
 
     def _setup_central(self):
-        """Cria o widget central com scroll area para os thumbnails."""
+        """Cria o widget central com Sidebar + área de conteúdo."""
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-        self.main_layout = QVBoxLayout(self.central_widget)
+
+        # Layout principal horizontal: [Sidebar] | [Conteúdo]
+        self.root_layout = QHBoxLayout(self.central_widget)
+        self.root_layout.setContentsMargins(0, 0, 0, 0)
+        self.root_layout.setSpacing(0)
+
+        # ── Sidebar (sempre visível) ──
+        self.sidebar = Sidebar()
+        self.root_layout.addWidget(self.sidebar)
+
+        # ── Área de conteúdo (direita) ──
+        self.content_area = QWidget()
+        self.main_layout = QVBoxLayout(self.content_area)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
 
         # Banner de atualização (oculto inicialmente)
-        self._update_banner = QFrame(self.central_widget)
+        self._update_banner = QFrame(self.content_area)
         self._update_banner.setObjectName("updateBanner")
         self._update_banner.setFixedHeight(48)
         self._update_banner.setStyleSheet("QFrame#updateBanner { background-color: #0D2B0D; border-bottom: 1px solid #1B3F1B; }")
@@ -366,7 +387,7 @@ class MainWindow(QMainWindow):
         self._update_banner.hide()
 
         # Banner de licença (oculto inicialmente)
-        self._license_banner = QFrame(self.central_widget)
+        self._license_banner = QFrame(self.content_area)
         self._license_banner.setObjectName("licenseBanner")
         self._license_banner.setFixedHeight(48)
         self._license_banner.setStyleSheet("QFrame#licenseBanner { background-color: #D84315; border-bottom: 1px solid #BF360C; }") 
@@ -432,18 +453,84 @@ class MainWindow(QMainWindow):
         self.wrapper_layout = QVBoxLayout(self.content_wrapper)
         self.wrapper_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.wrapper_layout.addWidget(self.scroll_area, 1) # Scroll area preenche quando visível
+        self.wrapper_layout.addWidget(self.scroll_area, 1)
 
         self.main_layout.addWidget(self._update_banner)
         self.main_layout.addWidget(self._license_banner)
-        self.main_layout.addWidget(self.content_wrapper, 1)  # Wrapper preenche espaço restante
+        self.main_layout.addWidget(self.content_wrapper, 1)
+
+        self.root_layout.addWidget(self.content_area, 1)
 
 
 
     def _setup_statusbar(self):
         self.status = QStatusBar()
         self.setStatusBar(self.status)
-        self.status.showMessage("Bem-vindo ao Ross PDF Editor")
+        self.status.showMessage("Bem-vindo ao DocPopularEditor")
+
+    # ══════════════════════════════════════════════════════════
+    # Gerenciamento de Modos
+    # ══════════════════════════════════════════════════════════
+
+    def _set_modo_home(self):
+        """Modo inicial: DropZone + Sidebar visíveis, ToolBar oculta."""
+        self._current_mode = self.MODE_HOME
+        self.toolbar.hide()
+        self.sidebar.clear_active()
+        self.setWindowTitle(f"{self.APP_TITLE} v{APP_VERSION}")
+
+    def _set_modo_editor(self):
+        """Modo editor livre: todos os botões da ToolBar ativos."""
+        self._current_mode = self.MODE_EDITOR
+        self.toolbar.show()
+        self.sidebar.clear_active()
+        # Habilita todos os botões de arquivo
+        self.act_open.setEnabled(True)
+        self.act_open.setVisible(True)
+        self.act_new.setEnabled(True)
+        self.act_new.setVisible(True)
+        self.act_save.setEnabled(True)
+        self.act_save.setVisible(True)
+        self.act_save_as.setEnabled(True)
+        self.act_save_as.setVisible(True)
+
+    def _set_modo_transacao(self):
+        """Modo transação PFPB: ToolBar com botões de arquivo desabilitados."""
+        self._current_mode = self.MODE_TRANSACAO
+        self.toolbar.show()
+        # Desabilita botões de arquivo (o fluxo PFPB controla o salvamento)
+        self.act_open.setEnabled(False)
+        self.act_open.setVisible(False)
+        self.act_new.setEnabled(False)
+        self.act_new.setVisible(False)
+        self.act_save.setEnabled(False)
+        self.act_save.setVisible(False)
+        self.act_save_as.setEnabled(False)
+        self.act_save_as.setVisible(False)
+
+    # ══════════════════════════════════════════════════════════
+    # Sidebar Handlers
+    # ══════════════════════════════════════════════════════════
+
+    def _on_sidebar_nova_transacao(self):
+        """Inicia o fluxo de Nova Transação PFPB."""
+        # TODO: Implementar o AuditorWizard em auditor_wizard.py
+        QMessageBox.information(
+            self, "Em Desenvolvimento",
+            "O fluxo de Nova Transação PFPB será implementado em breve!\n\n"
+            "Esta funcionalidade incluirá:\n"
+            "• Digitalização guiada por etapas\n"
+            "• Validação de CPF\n"
+            "• Geração automática de PDF"
+        )
+
+    def _on_sidebar_buscar(self):
+        """Abre o painel de busca de documentos por CPF."""
+        # TODO: Implementar o SearchDialog em search_dialog.py
+        QMessageBox.information(
+            self, "Em Desenvolvimento",
+            "A busca de documentos por CPF será implementada em breve!"
+        )
 
     # ══════════════════════════════════════════════════════════
     # Ajuda
@@ -627,7 +714,7 @@ class MainWindow(QMainWindow):
         import webbrowser
         import urllib.parse
         mid = get_machine_id()
-        msg = f"Olá Robinson, minha licença do Ross PDF Editor está vencendo (ID: {mid}) e gostaria de renovar."
+        msg = f"Olá Robinson, minha licença do DocPopularEditor está vencendo (ID: {mid}) e gostaria de renovar."
         url = f"https://wa.me/5516991080895?text={urllib.parse.quote(msg)}"
         webbrowser.open(url)
 
@@ -707,7 +794,7 @@ class MainWindow(QMainWindow):
         self.scroll_area.hide()
         self._show_drop_zone()
         self._enable_tools(False)
-        self.setWindowTitle(self.APP_TITLE)
+        self._set_modo_home()
         self.status.showMessage("Novo projeto iniciado")
 
     def _maybe_save_changes(self) -> bool:
@@ -762,6 +849,7 @@ class MainWindow(QMainWindow):
                 self.engine.insert_image_as_page(path)
 
             self._hide_drop_zone()
+            self._set_modo_editor()
             self._enable_tools(True)
             self.is_dirty = False
             self._undo_stack.clear()
@@ -1320,7 +1408,7 @@ class MainWindow(QMainWindow):
             
         # 2. Confirmação geral de saída
         msg = QMessageBox(self)
-        msg.setWindowTitle("Sair do Ross PDF Editor")
+        msg.setWindowTitle("Sair do DocPopularEditor")
         msg.setText("Deseja realmente fechar o aplicativo?")
         msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg.setButtonText(QMessageBox.Yes, "Sim")
