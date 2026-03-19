@@ -664,9 +664,11 @@ class AuditorWizard(QWidget):
             self._last_cpf_check = novo
             self._verificar_documento_existente(novo)
 
-    def _verificar_documento_existente(self, cpf: str):
+    def _verificar_documento_existente(self, cpf_formatado: str):
+        # Limpa para buscar no sistema de arquivos
+        cpf_clean = "".join(filter(str.isdigit, cpf_formatado))
         try:
-            paths = find_all_documents_by_cpf(cpf, self.settings)
+            paths = find_all_documents_by_cpf(cpf_clean, self.settings)
         except Exception:
             paths = []
 

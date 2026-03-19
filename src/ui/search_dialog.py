@@ -189,18 +189,17 @@ class SearchDialog(QDialog):
         self.btn_search.setEnabled(is_completo and is_valido)
 
     def _do_search(self):
-        cpf = self.entry_cpf.text()
-        if not validate_cpf(cpf):
-            return
-
+        cpf_formatado = self.entry_cpf.text()
+        # Limpa o CPF para buscar no sistema de arquivos (apenas números)
+        cpf_clean = "".join(filter(str.isdigit, cpf_formatado))
         try:
-            paths = find_all_documents_by_cpf(cpf, self.settings)
+            paths = find_all_documents_by_cpf(cpf_clean, self.settings)
         except Exception as e:
             paths = []
             QMessageBox.warning(self, "Erro na Busca", f"Não foi possível buscar documentos:\n{e}")
 
         self._paths = paths
-        self._render_results(cpf, paths)
+        self._render_results(cpf_clean, paths)
 
     def _render_results(self, cpf: str, paths: list):
         # Limpa os resultados anteriores
@@ -256,20 +255,20 @@ class SearchDialog(QDialog):
         info_layout.setSpacing(4)
 
         nome = os.path.basename(path)
-        lbl_nome = QLabel(nome)
+        lbl_nome = QLabel(str(nome))
         lbl_nome.setStyleSheet("color: #E3F2FD; font-size: 13px; font-weight: bold; background: transparent;")
         lbl_nome.setWordWrap(True)
         info_layout.addWidget(lbl_nome)
 
         try:
-            tamanho = os.path.getsize(path) / 1024
+            tamanho = os.path.getsize(str(path)) / 1024
             lbl_info = QLabel(f"Tamanho: {tamanho:.1f} KB")
         except Exception:
             lbl_info = QLabel("Arquivo localizado")
         lbl_info.setStyleSheet("color: #78909C; font-size: 11px; background: transparent;")
         info_layout.addWidget(lbl_info)
 
-        lbl_path = QLabel(path)
+        lbl_path = QLabel(str(path))
         lbl_path.setStyleSheet("color: #546E7A; font-size: 10px; background: transparent;")
         lbl_path.setWordWrap(True)
         info_layout.addWidget(lbl_path)
