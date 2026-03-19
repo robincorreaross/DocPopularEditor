@@ -629,8 +629,9 @@ class MainWindow(QMainWindow):
         """Abre o diálogo de configurações."""
         dialog = SettingsDialog(self)
         if dialog.exec():
-            # Se salvou algo, recheca hardware
+            # Configurações salvas — recarrega e atualiza hardware
             self._check_scanner_hardware()
+            self.status.showMessage("Configurações salvas com sucesso.", 3000)
 
     def _check_scanner_hardware(self):
         """Verifica se há scanners físicos e atualiza o botão."""
