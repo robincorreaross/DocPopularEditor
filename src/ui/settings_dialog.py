@@ -1,7 +1,7 @@
 """
 SettingsDialog - Diálogo de configurações do DocPopularEditor.
 Integra as funcionalidades do DocPopular (Armazenamento + Scanner)
-com o layout premium do Ross PDF Editor.
+com o layout premium do DocPopular Editor.
 """
 
 import os

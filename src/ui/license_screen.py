@@ -1,5 +1,5 @@
 """
-license_screen.py - Tela de ativação de licença do Ross PDF Editor (PySide6).
+license_screen.py - Tela de ativação de licença do DocPopularEditor (PySide6).
 Exibida ao iniciar o app quando não há licença válida on-line ou off-line.
 """
 
@@ -33,7 +33,7 @@ class LicenseScreen(QWidget):
         self.msg_extra = msg_extra
         self.machine_id = get_machine_id()
 
-        self.setWindowTitle("Ross PDF Editor — Gerenciamento de Licença")
+        self.setWindowTitle("DocPopularEditor — Gerenciamento de Licença")
         self.setFixedSize(620, 560)
         self.setStyleSheet(self._global_styles())
 
@@ -70,34 +70,34 @@ class LicenseScreen(QWidget):
             "novo": {
                 "icon": "👋",
                 "titulo": "Seja Bem-vindo!",
-                "subtitulo": "Para começar a usar o Ross PDF Editor, você precisa de uma licença ativa.",
+                "subtitulo": "Para começar a usar o DocPopular Editor, você precisa de uma licença ativa.",
                 "orientacao": "Fale com o administrador para escolher o plano ideal e liberar seu acesso.",
                 "cor": "#4FC3F7",
-                "zap_msg": f"Olá Robinson, acabei de instalar o Ross PDF Editor e gostaria de escolher um plano. Meu ID: {self.machine_id}"
+                "zap_msg": f"Olá Robinson, acabei de instalar o DocPopularEditor e gostaria de escolher um plano. Meu ID: {self.machine_id}"
             },
             "expirado": {
                 "icon": "⚠️",
-                "titulo": "Sua Licença Expirou",
-                "subtitulo": "O prazo de validade do seu plano atual chegou ao fim.",
+                "titulo": "Licença Expirada",
+                "subtitulo": "Sua licença para o DocPopularEditor expirou. Renove para continuar utilizando.",
                 "orientacao": "Entre em contato para renovar sua assinatura e continuar sua operação.",
                 "cor": "#EF5350",
-                "zap_msg": f"Olá Robinson, minha licença do Ross PDF Editor expirou. Gostaria de renovar. Meu ID: {self.machine_id}"
+                "zap_msg": f"Olá Robinson, minha licença do DocPopularEditor expirou. Gostaria de renovar. Meu ID: {self.machine_id}"
             },
             "inativo": {
                 "icon": "🚫",
-                "titulo": "Licença Inativada",
-                "subtitulo": "Seu acesso foi desativado temporariamente pelo administrador.",
+                "titulo": "Licença Inativa",
+                "subtitulo": "Esta licença foi desativada. Entre em contato com o suporte.",
                 "orientacao": "Favor entrar em contato para verificar o status da sua conta.",
                 "cor": "#FF9800",
-                "zap_msg": f"Olá Robinson, meu acesso ao Ross PDF Editor aparece como Inativo. Pode verificar? Meu ID: {self.machine_id}"
+                "zap_msg": f"Olá Robinson, meu acesso ao DocPopularEditor aparece como Inativo. Pode verificar? Meu ID: {self.machine_id}"
             }
         }.get(self.estado, {
             "icon": "📄",
-            "titulo": "Ross PDF Editor",
+            "titulo": "DocPopularEditor",
             "subtitulo": "Gerenciamento inteligente de licenças.",
             "orientacao": "Entre em contato para ativar sua licença.",
             "cor": "#4FC3F7",
-            "zap_msg": f"Olá Robinson, preciso de ativação no Ross PDF Editor. Meu ID: {self.machine_id}"
+            "zap_msg": f"Olá Robinson, preciso de ativação no DocPopularEditor. Meu ID: {self.machine_id}"
         })
 
         self.zap_msg = config["zap_msg"]

@@ -1,12 +1,12 @@
 {
-  "version": "1.7.4",
-  "release_date": "2026-03-11",
-  "download_zip_url": "https://github.com/robincorreaross/rossPDFeditor/releases/latest/download/RossPDFEditor.zip",
-  "download_url": "https://github.com/robincorreaross/rossPDFeditor/releases/latest",
+  "version": "1.0.0",
+  "release_date": "2026-03-18",
+  "download_zip_url": "https://github.com/robincorreaross/DocPopularEditor/releases/latest/download/DocPopularEditor.zip",
+  "download_url": "https://github.com/robincorreaross/DocPopularEditor/releases/latest",
   "changelog": [
-    "Versão inicial com suporte a Drag & Drop",
-    "Correção de reordenação (Swap de páginas)",
-    "Implementação de Auto-Update Ross"
+    "Fase 1: Migração para PySide6 e nova interface",
+    "Fase 2: Fluxo de Transação e Digitalização PFPB",
+    "Fase 3: Integração de Configurações"
   ],
   "mandatory": false
 }

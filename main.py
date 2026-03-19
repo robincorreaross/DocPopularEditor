@@ -41,7 +41,7 @@ def main():
 
     app = QApplication(sys.argv)
     app.setApplicationName("DocPopularEditor")
-    app.setOrganizationName("Ross")
+    app.setOrganizationName("DocPopular")
 
     # Fonte padrão
     font = QFont("Segoe UI", 10)

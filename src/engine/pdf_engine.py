@@ -1,5 +1,5 @@
 """
-Ross PDF Editor - Motor de manipulação de PDFs.
+DocPopular PDF Engine - Motor de manipulação de PDFs.
 
 Usa PyMuPDF (fitz) para manipulação rápida e precisa de PDFs:
 - Carregar / renderizar páginas como thumbnails

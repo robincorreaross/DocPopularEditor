@@ -1,5 +1,5 @@
 """
-help_screen.py - Central de Ajuda e Suporte do Ross PDF Editor.
+help_screen.py - Central de Ajuda e Suporte do DocPopularEditor.
 Exibe informações de licenciamento, Machine ID, vencimento e suporte via WhatsApp.
 """
 
@@ -28,10 +28,10 @@ class HelpScreen(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.machine_id = get_machine_id()
-        self._settings = QSettings("Ross", "RossPDFEditor")
+        self._settings = QSettings("DocPopular", "DocPopularEditor")
         self.license_info = self._get_license_info()
 
-        self.setWindowTitle("Ross PDF Editor — Ajuda e Suporte")
+        self.setWindowTitle("DocPopularEditor — Ajuda e Suporte")
         self.setFixedSize(600, 500)
         self.setStyleSheet(self._global_styles())
         self._build()
@@ -206,6 +206,6 @@ class HelpScreen(QDialog):
         clipboard.setText(self.machine_id)
 
     def _abrir_whatsapp(self):
-        msg = f"Olá Robinson, preciso de suporte técnico no Ross PDF Editor. Meu ID: {self.machine_id}"
+        msg = f"Olá Robinson, preciso de suporte técnico no DocPopularEditor. Meu ID: {self.machine_id}"
         url = f"https://wa.me/{self.WHATSAPP_NUMBER}?text={urllib.parse.quote(msg)}"
         webbrowser.open(url)

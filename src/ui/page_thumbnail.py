@@ -1,5 +1,5 @@
 """
-Ross PDF Editor – Componente de Card de Página (Thumbnail).
+DocPopular PDF Engine – Componente de Card de Página (Thumbnail).
 
 Cada página do PDF é representada por um card com:
 - Miniatura renderizada

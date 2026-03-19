@@ -1,5 +1,5 @@
 """
-Ross PDF Editor – Diálogo de Recorte (Crop).
+DocPopular PDF Engine – Diálogo de Recorte (Crop).
 
 Permite ao usuário selecionar uma região retangular sobre a página
 para realizar um recorte real (CropBox), similar ao que se faz em editores

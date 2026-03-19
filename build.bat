@@ -1,96 +1,69 @@
 @echo off
-echo ============================================================
-echo   Ross PDF Editor - Build Completo (PyInstaller + Instalador)
-echo ============================================================
+setlocal enabledelayedexpansion
 
-REM Tenta fechar o app e o compilador se estiverem abertos
-taskkill /F /IM RossPDFEditor.exe /T >nul 2>&1
-taskkill /F /IM ISCC.exe /T >nul 2>&1
-timeout /t 2 /nobreak >nul
+echo   DocPopular Editor - Build Completo (PyInstaller + Instalador)
+echo   (C) 2026 DocPopular Team
+echo.
 
-REM Limpa pastas de build anteriores para evitar erros de permissao
-if exist build (
-    echo [+] Limpando pasta build anterior...
-    rmdir /s /q build >nul 2>&1
-)
-if exist dist (
-    echo [+] Limpando pasta dist anterior...
-    rmdir /s /q dist >nul 2>&1
-)
+:: 1. Limpeza
+taskkill /F /IM DocPopularEditor.exe /T >nul 2>&1
+echo   [1/6] Limpando pastas antigas...
+if exist build rd /s /q build
+if exist dist rd /s /q dist
 
-REM Limpa a pasta installer para novos artefatos
-if exist installer (
-    echo [+] Limpando pasta installer...
-    del /q installer\* >nul 2>&1
-) else (
-    mkdir installer
-)
-
-REM Extrai a versao do version.py usando python
+:: 2. Versão
+echo   [2/6] Verificando versao...
 for /f %%I in ('python -c "from version import APP_VERSION; print(APP_VERSION)"') do set APP_VERSION=%%I
-echo [+] Versao detectada: v%APP_VERSION%
-echo.
+echo     Versao detectada: v%APP_VERSION%
 
-echo [1/2] Compilando o aplicativo com PyInstaller...
-python -m PyInstaller --clean --noconfirm ross_pdf_editor.spec
-if errorlevel 1 (
-    echo ERRO: falha ao gerar o aplicativo.
-    pause & exit /b 1
-)
-echo     OK - dist\RossPDFEditor\
-
-echo.
-echo [2/2] Gerando instalador com Inno Setup...
+:: 3. Gerar .iss a partir da versao
+echo   [3/6] Gerando script Inno Setup...
 python _gerar_iss.py
 
-REM Procura o compilador do Inno Setup
-set ISCC=
-if exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" set ISCC=C:\Program Files (x86)\Inno Setup 6\ISCC.exe
-if exist "C:\Program Files\Inno Setup 6\ISCC.exe"       set ISCC=C:\Program Files\Inno Setup 6\ISCC.exe
+:: 4. PyInstaller
+echo   [4/6] Executando PyInstaller...
+pyinstaller DocPopularEditor.spec --noconfirm --clean
 
-if "%ISCC%"=="" (
-    echo AVISO: Inno Setup nao encontrado.
-    echo Instale em: https://jrsoftware.org/isdl.php
-    echo Depois execute novamente ou compile manualmente: RossPDFEditor.iss
-    pause & exit /b 0
+if %ERRORLEVEL% neq 0 (
+    echo.
+    echo   [!] ERRO: Falha na compilacao com PyInstaller.
+    pause
+    exit /b %ERRORLEVEL%
 )
 
-"%ISCC%" RossPDFEditor.iss
-if errorlevel 1 (
-    echo ERRO: falha ao gerar o instalador.
-    pause & exit /b 1
+echo     OK - dist\DocPopularEditor
+
+:: 5. Inno Setup (Opcional, se o ISCC estiver no PATH)
+echo   [5/6] Gerando Instalador .exe...
+set ISCC="C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+if exist %ISCC% (
+    "%ISCC%" DocPopularEditor.iss
+    if %ERRORLEVEL% neq 0 (
+        echo   [!] ERRO: Falha ao gerar o instalador.
+    ) else (
+        echo     OK - Instalador gerado em installer\
+    )
+) else (
+    echo     [!] AVISO: ISCC.exe nao encontrado.
+    echo     Depois execute novamente ou compile manualmente: DocPopularEditor.iss
 )
 
-echo.
-echo [3/3] Criando pacote ZIP para auto-update...
-timeout /t 2 /nobreak >nul
-set ZIP_BASE_NAME=RossPDFEditor
-if exist "installer\%ZIP_BASE_NAME%.zip" del "installer\%ZIP_BASE_NAME%.zip"
-python -c "import shutil; shutil.make_archive('installer/%ZIP_BASE_NAME%', 'zip', 'dist/RossPDFEditor')"
-if errorlevel 1 (
-    echo ERRO: falha ao gerar o arquivo ZIP.
-    pause & exit /b 1
-)
-echo     OK - installer\%ZIP_BASE_NAME%.zip (v%APP_VERSION%)
+:: 6. Gerar ZIP para auto-update
+echo   [6/6] Gerando ZIP para Auto-Update...
+set ZIP_BASE_NAME=DocPopularEditor
+if not exist installer mkdir installer
+python -c "import shutil; shutil.make_archive('installer/%ZIP_BASE_NAME%', 'zip', 'dist', 'DocPopularEditor')"
 
 echo.
-echo [4/4] Limpeza pos-build...
-echo [+] Removendo pastas temporarias (build/dist)...
-rmdir /s /q build >nul 2>&1
-rmdir /s /q dist >nul 2>&1
-echo     Concluido.
-
+echo ==========================================================
+echo   BUILD CONCLUIDO COM SUCESSO!
+echo ==========================================================
+echo   Executavel: dist\DocPopularEditor\DocPopularEditor.exe
+echo   Instalador:  installer\DocPopularEditor_Setup_v%APP_VERSION%.exe
+echo   Auto-update: installer\DocPopularEditor.zip
 echo.
-echo ============================================================
-echo   BUILD COMPLETO!
-echo ============================================================
-echo.
-echo  Instalador:  installer\RossPDFEditor_Setup_v%APP_VERSION%.exe
-echo  Auto-update: installer\RossPDFEditor.zip
-echo.
-echo  IMPORTANTE: 
-echo  1. Envie o .exe para novos clientes.
-echo  2. Carregue o .zip no GitHub Releases como 'RossPDFEditor.zip'
-echo     para que os clientes atuais recebam a v%APP_VERSION% automaticamente.
-echo ============================================================
+echo   Lembrete para Release:
+echo   1. Atualize version.json no repositório.
+echo   2. Carregue o .zip no GitHub Releases como 'DocPopularEditor.zip'
+echo ==========================================================
 pause

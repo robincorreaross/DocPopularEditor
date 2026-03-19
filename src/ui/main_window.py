@@ -1,7 +1,7 @@
 """
 DocPopularEditor – Janela Principal.
 
-Interface unificada que combina o Ross PDF Editor com o DocPopular:
+Interface unificada que combina o DocPopular Editor com o DocPopular PDF Engine:
 - Sidebar permanente com navegação (Nova Transação, Buscar, Config, Ajuda)
 - Toolbar com ações de edição de PDF (visível nos modos Editor e Transação)
 - Área central de miniaturas com drag & drop
@@ -170,7 +170,7 @@ class MainWindow(QMainWindow):
         self._max_history = 30
 
         # Última pasta visitada (persistência via QSettings)
-        self._settings = QSettings("Ross", "DocPopularEditor")
+        self._settings = QSettings("DocPopular", "DocPopularEditor")
 
         # Modo atual do aplicativo
         self._current_mode = self.MODE_HOME

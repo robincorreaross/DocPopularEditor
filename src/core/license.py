@@ -1,5 +1,5 @@
 """
-license.py - Sistema de licenciamento do Ross PDF Editor.
+license.py - Sistema de licenciamento do DocPopularEditor.
 
 - Machine ID: SHA256 de MAC + hostname + platform
 - Licença: payload JSON assinado com HMAC-SHA256, codificado em base32
@@ -22,7 +22,7 @@ from datetime import date, datetime, timedelta
 from typing import Optional
 
 # ─── Chave secreta (hardcoded — não compartilhe este código) ─────────────────
-_SECRET_KEY = b"RossPDFEditor@License#2026$Ross&Seguranca!"
+_SECRET_KEY = b"DocPopularEditor@License#2026$DocPopular&Seguranca!"
 
 
 # ─── Machine ID ──────────────────────────────────────────────────────────────

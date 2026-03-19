@@ -1,10 +1,9 @@
 """
-updater.py - Verificador e instalador automático de atualizações do Ross PDF Editor.
-
-Fluxo de auto-update no Windows:
- 1. Baixa RossPDFEditor.zip para %TEMP%
- 2. Extrai para %TEMP%/ross_update/
- 3. Cria update_helper.bat que aguarda o app fechar e copia os arquivos
+updater.py - Verificador e instalador automático de atualizações do DocPopularEditor.
+Lógica:
+ 1. Baixa DocPopularEditor.zip para %TEMP%
+ 2. Extrai e executa o instalador .exe de forma silenciosa (/VERYSILENT)
+update_helper.bat que aguarda o app fechar e copia os arquivos
  4. Lança o bat em background e fecha o app atual
 """
 
@@ -51,7 +50,7 @@ def verificar_atualizacao(
         try:
             req = request.Request(
                 UPDATE_URL,
-                headers={"User-Agent": f"RossPDFEditor/{APP_VERSION}"},
+                headers={"User-Agent": f"DocPopularEditor/{APP_VERSION}"},
             )
             with request.urlopen(req, timeout=timeout) as resp:
                 data = json.loads(resp.read().decode())
@@ -101,7 +100,7 @@ def baixar_e_instalar(
         on_error: chamado com mensagem de erro em caso de falha
     """
     def _run() -> None:
-        tmp_dir = Path(tempfile.mkdtemp(prefix="ross_update_"))
+        tmp_dir = Path(tempfile.mkdtemp(prefix="docpopular_update_"))
         zip_path = tmp_dir / f"{APP_NAME}.zip"
         extract_dir = tmp_dir / "extracted"
 
@@ -109,7 +108,7 @@ def baixar_e_instalar(
             # ── 1. Download ───────────────────────────────────────────────────
             on_progress(5, "Conectando ao servidor...")
             
-            req = request.Request(zip_url, headers={"User-Agent": "RossPDFEditor-Updater"})
+            req = request.Request(zip_url, headers={"User-Agent": "DocPopularEditor-Updater"})
             with request.urlopen(req, timeout=15) as response:
                 total_size = int(response.headers.get('Content-Length', 0))
                 
@@ -158,7 +157,7 @@ def baixar_e_instalar(
             bat_path = tmp_dir / "update_helper.bat"
             bat_content = f"""@echo off
 setlocal enabledelayedexpansion
-title Ross PDF Editor - Instalando Atualizacao...
+title DocPopularEditor - Instalando Atualizacao...
 echo Aguardando o aplicativo fechar...
 timeout /t 3 /nobreak >nul
 

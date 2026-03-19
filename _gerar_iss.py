@@ -1,25 +1,28 @@
 from version import APP_VERSION
 
-# Gera o RossPDFEditor.iss para o Inno Setup (ASCII, sem BOM)
-template = """; RossPDFEditor.iss - Script do instalador (Inno Setup 6)
+# Gera o DocPopularEditor.iss para o Inno Setup (ASCII, sem BOM)
+template = """; DocPopularEditor.iss - Script do instalador (Inno Setup 6)
 
 [Setup]
-AppId={{D1A2B3C4-E5F6-4A7B-8C9D-0E1F2A3B4C5D}
-AppName=Ross PDF Editor
+AppId={{9B880DD-1234-4567-89AB-CDEF01234567}}
+AppName=DocPopular Editor
 AppVersion={{VERSION}}
-AppVerName=Ross PDF Editor v{{VERSION}}
-AppPublisher=Ross Sistemas
-DefaultDirName={autopf}\\RossPDFEditor
-DefaultGroupName=Ross PDF Editor
+AppVerName=DocPopular Editor v{{VERSION}}
+AppPublisher=DocPopular Team
+AppPublisherURL=https://github.com/robincorreaross/DocPopularEditor
+AppSupportURL=https://github.com/robincorreaross/DocPopularEditor/issues
+AppUpdatesURL=https://github.com/robincorreaross/DocPopularEditor/releases
+DefaultDirName={autopf}\\DocPopularEditor
+DefaultGroupName=DocPopular Editor
 DisableProgramGroupPage=yes
 OutputDir=installer
-OutputBaseFilename=RossPDFEditor_Setup_v{{VERSION}}
+OutputBaseFilename=DocPopularEditor_Setup_v{{VERSION}}
 WizardStyle=modern
 Compression=lzma2
 SolidCompression=yes
 PrivilegesRequired=lowest
 AllowNoIcons=yes
-UninstallDisplayName=Ross PDF Editor
+UninstallDisplayName=DocPopular Editor
 UninstallDisplayIcon={app}\\_internal\\assets\\icon.ico
 SetupIconFile=assets\\icon.ico
 
@@ -32,15 +35,15 @@ Name: "desktopicon";   Description: "Criar atalho na Area de Trabalho"; GroupDes
 Name: "startmenuicon"; Description: "Criar atalho no Menu Iniciar";     GroupDescription: "Atalhos:"
 
 [Files]
-Source: "dist\\RossPDFEditor\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\\DocPopularEditor\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autodesktop}\\Ross PDF Editor";       Filename: "{app}\\RossPDFEditor.exe"; Tasks: desktopicon
-Name: "{group}\\Ross PDF Editor";             Filename: "{app}\\RossPDFEditor.exe"; Tasks: startmenuicon
-Name: "{group}\\Desinstalar Ross PDF Editor"; Filename: "{uninstallexe}";         IconFilename: "{app}\\_internal\\assets\\icon.ico"; Tasks: startmenuicon
+Name: "{autodesktop}\\DocPopular Editor";       Filename: "{app}\\DocPopularEditor.exe"; Tasks: desktopicon
+Name: "{group}\\DocPopular Editor";             Filename: "{app}\\DocPopularEditor.exe"; Tasks: startmenuicon
+Name: "{group}\\Desinstalar DocPopular Editor"; Filename: "{uninstallexe}";         IconFilename: "{app}\\_internal\\assets\\icon.ico"; Tasks: startmenuicon
 
 [Run]
-Filename: "{app}\\RossPDFEditor.exe"; Description: "Abrir Ross PDF Editor agora"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\\DocPopularEditor.exe"; Description: "Abrir DocPopular Editor agora"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
@@ -48,7 +51,7 @@ Type: filesandordirs; Name: "{app}"
 
 iss = template.replace("{{VERSION}}", APP_VERSION)
 
-outfile = "RossPDFEditor.iss"
+outfile = "DocPopularEditor.iss"
 with open(outfile, "w", encoding="ascii") as f:
     f.write(iss)
 
